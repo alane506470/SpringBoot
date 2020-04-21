@@ -20,6 +20,13 @@
 	</properties>
 
 	<dependencies>
+		<!-- 當代碼變動時，它會自動進行重啟應用 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
