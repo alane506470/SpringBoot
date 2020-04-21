@@ -51,6 +51,7 @@ public class ProductController {
 	public ResponseEntity<Product> createProduct(@RequestBody Product request) {
 		boolean isIdDuplicated = productDB.stream().anyMatch(p -> p.getId().equals(request.getId()));
 		if (isIdDuplicated) {
+			// 請求格式正確但是有語意錯誤，無法回應
 			return ResponseEntity.unprocessableEntity().build();
 		}
 		
@@ -65,5 +66,41 @@ public class ProductController {
 		return ResponseEntity.created(location).build();
 	}
 	
+	@PutMapping(value="/products/{id}")
+	public ResponseEntity<List<Product>> replaceProduct(@RequestBody Product request,@PathVariable(value="id")String id) {
+		Optional<Product> productOp = productDB.stream()
+				.filter(p -> p.getId().equals(id))
+				.findFirst();
+		if(!productOp.isPresent()) {
+			return ResponseEntity.notFound().build();
+		}
+
+	    Product oldProduct = productOp.get();
+	    int productIndex = productDB.indexOf(oldProduct);
+
+	    Product product = new Product();
+	    product.setId(oldProduct.getId());
+	    product.setName(request.getName());
+	    productDB.set(productIndex, product);
+
+	    return ResponseEntity.ok().body(productDB);
+				
+	}
+	
+	//操作完畢後可回傳狀態碼204（No Content）
+	//，意思是請求成功，但回應主體沒有內容。它跟200很像，只差在有無內容而已。
+	@DeleteMapping(value="/products/{id}")
+	public ResponseEntity deleteProduct(@PathVariable("id") String id) {
+		Optional<Product> productOp = productDB.stream()
+			.filter(p -> p.getId().equals(id))
+			.findFirst();
+		
+		if(productOp.isPresent()) {
+			Product product = productOp.get();
+			productDB.remove(product);
+		}
+		
+		return ResponseEntity.noContent().build();
+	}
 	
 }
