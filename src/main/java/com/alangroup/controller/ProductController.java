@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -101,6 +103,22 @@ public class ProductController {
 		}
 		
 		return ResponseEntity.noContent().build();
+	}
+	
+	// 三、網址參數
+	@GetMapping(value="products")
+	public ResponseEntity<List<Product>> getProducts(@RequestParam(value = "keyword",required = false)String keyword) {
+		List<Product> products;
+		
+		if(keyword == null) {
+			products = productDB; 
+		} else {
+			products = productDB.stream()
+					.filter(p -> p.getName().contains(keyword))
+					.collect(Collectors.toList());
+		}
+		
+		return ResponseEntity.ok(products);
 	}
 	
 }
