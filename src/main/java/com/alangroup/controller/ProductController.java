@@ -2,14 +2,17 @@ package com.alangroup.controller;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.alangroup.vo.Product;
+import com.alangroup.vo.QueryParameter;
 
 @RestController
 @RequestMapping(value="/alanapi")
@@ -60,6 +64,7 @@ public class ProductController {
 		Product product = new Product();
 		product.setId(request.getId());
 		product.setName(request.getName());
+		product.setPrice(request.getPrice());
 		productDB.add(product);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
@@ -106,7 +111,7 @@ public class ProductController {
 	}
 	
 	// 三、網址參數
-	@GetMapping(value="products")
+	@GetMapping(value="/products/oneParam")
 	public ResponseEntity<List<Product>> getProducts(@RequestParam(value = "keyword",required = false)String keyword) {
 		List<Product> products;
 		
@@ -119,6 +124,28 @@ public class ProductController {
 		}
 		
 		return ResponseEntity.ok(products);
+	}
+	
+	@GetMapping(value="/products")
+	public ResponseEntity<List<Product>> getProducts(@ModelAttribute QueryParameter param) {
+		  Stream<Product> stream = productDB.stream();
+
+		    if (param.getKeyword() != null) {
+		        stream = stream
+		                .filter(p -> p.getName().contains(param.getKeyword()));
+		    }
+
+		    if ("price".equals(param.getOrderBy()) && param.getSortRule() != null) {
+		        Comparator<Product> comparator = param.getSortRule().equals("asc")
+		                ? Comparator.comparing(Product::getPrice)
+		                : Comparator.comparing(Product::getPrice).reversed();
+
+		        stream = stream.sorted(comparator);
+		    }
+
+		    List<Product> products = stream.collect(Collectors.toList());
+
+		    return ResponseEntity.ok(products);
 	}
 	
 }
