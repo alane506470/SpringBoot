@@ -67,7 +67,7 @@ public class ProductController {
 	}
 	
 	@PutMapping(value="/products/{id}")
-	public ResponseEntity<List<Product>> replaceProduct(@RequestBody Product request,@PathVariable(value="id")String id) {
+	public ResponseEntity<Product> replaceProduct(@RequestBody Product request,@PathVariable(value="id")String id) {
 		Optional<Product> productOp = productDB.stream()
 				.filter(p -> p.getId().equals(id))
 				.findFirst();
@@ -83,14 +83,14 @@ public class ProductController {
 	    product.setName(request.getName());
 	    productDB.set(productIndex, product);
 
-	    return ResponseEntity.ok().body(productDB);
+	    return ResponseEntity.ok().body(product);
 				
 	}
 	
 	//操作完畢後可回傳狀態碼204（No Content）
 	//，意思是請求成功，但回應主體沒有內容。它跟200很像，只差在有無內容而已。
 	@DeleteMapping(value="/products/{id}")
-	public ResponseEntity deleteProduct(@PathVariable("id") String id) {
+	public ResponseEntity<Product> deleteProduct(@PathVariable("id") String id) {
 		Optional<Product> productOp = productDB.stream()
 			.filter(p -> p.getId().equals(id))
 			.findFirst();
