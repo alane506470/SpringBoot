@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.alangroup.vo.Product;
-import com.alangroup.vo.QueryParameter;
+import com.alangroup.vo.ProductQueryParameter;
 
 @RestController
 @RequestMapping(value="/alanapi")
@@ -127,7 +127,7 @@ public class ProductController {
 	}
 	
 	@GetMapping(value="/products")
-	public ResponseEntity<List<Product>> getProducts(@ModelAttribute QueryParameter param) {
+	public ResponseEntity<List<Product>> getProducts(@ModelAttribute ProductQueryParameter param) {
 		  Stream<Product> stream = productDB.stream();
 
 		    if (param.getKeyword() != null) {

@@ -1,6 +1,6 @@
 package com.alangroup.vo;
 
-public class QueryParameter {
+public class ProductQueryParameter {
 
 	private String keyword;
 	
