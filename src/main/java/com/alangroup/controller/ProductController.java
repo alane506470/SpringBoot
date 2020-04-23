@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.alangroup.service.ProductService;
 import com.alangroup.vo.Product;
 import com.alangroup.vo.ProductQueryParameter;
 
@@ -29,8 +31,10 @@ import com.alangroup.vo.ProductQueryParameter;
 @RequestMapping(value="/alanapi")
 public class ProductController {
 	
-	private List<Product> productDB = new ArrayList<>();
+	@Autowired
+	private ProductService productService;
 
+	// 測試api
 	@GetMapping(value="/productstest/{id}")
 	public ResponseEntity<Product> getProductTest(@PathVariable("id")String id) {
 		Product product = new Product();
@@ -41,55 +45,29 @@ public class ProductController {
 		return new ResponseEntity<>(product,HttpStatus.NOT_FOUND);
 	}
 	
+	// 查詢
 	@GetMapping(value="/products/{id}")
 	public ResponseEntity<Product> getProduct(@PathVariable("id")String id) {
-		Optional<Product> productOp = productDB.stream()
-				.filter(p -> p.getId().equals(id))
-				.findFirst();
-		if(productOp.isPresent()) {
-			Product product = productOp.get();
-			return ResponseEntity.ok().body(product);
-		}
-		return ResponseEntity.notFound().build();
+		Product product = productService.getProduct(id);
+		return ResponseEntity.ok().body(product);
+		
 	}
 	
 	@PostMapping(value="/products")
 	public ResponseEntity<Product> createProduct(@RequestBody Product request) {
-		boolean isIdDuplicated = productDB.stream().anyMatch(p -> p.getId().equals(request.getId()));
-		if (isIdDuplicated) {
-			// 請求格式正確但是有語意錯誤，無法回應
-			return ResponseEntity.unprocessableEntity().build();
-		}
+		Product product = productService.createProduct(request);
 		
-		Product product = new Product();
-		product.setId(request.getId());
-		product.setName(request.getName());
-		product.setPrice(request.getPrice());
-		productDB.add(product);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
 				.buildAndExpand(product.getId())
 				.toUri();
+		
 		return ResponseEntity.created(location).build();
 	}
 	
 	@PutMapping(value="/products/{id}")
 	public ResponseEntity<Product> replaceProduct(@RequestBody Product request,@PathVariable(value="id")String id) {
-		Optional<Product> productOp = productDB.stream()
-				.filter(p -> p.getId().equals(id))
-				.findFirst();
-		if(!productOp.isPresent()) {
-			return ResponseEntity.notFound().build();
-		}
-
-	    Product oldProduct = productOp.get();
-	    int productIndex = productDB.indexOf(oldProduct);
-
-	    Product product = new Product();
-	    product.setId(oldProduct.getId());
-	    product.setName(request.getName());
-	    productDB.set(productIndex, product);
-
+		Product product = productService.replaceProduct(id, request);
 	    return ResponseEntity.ok().body(product);
 				
 	}
@@ -98,54 +76,25 @@ public class ProductController {
 	//，意思是請求成功，但回應主體沒有內容。它跟200很像，只差在有無內容而已。
 	@DeleteMapping(value="/products/{id}")
 	public ResponseEntity<Product> deleteProduct(@PathVariable("id") String id) {
-		Optional<Product> productOp = productDB.stream()
-			.filter(p -> p.getId().equals(id))
-			.findFirst();
-		
-		if(productOp.isPresent()) {
-			Product product = productOp.get();
-			productDB.remove(product);
-		}
-		
+		productService.deleteProduct(id);
 		return ResponseEntity.noContent().build();
 	}
 	
 	// 三、網址參數
 	@GetMapping(value="/products/oneParam")
 	public ResponseEntity<List<Product>> getProducts(@RequestParam(value = "keyword",required = false)String keyword) {
-		List<Product> products;
+		List<Product> products = new ArrayList<>();
 		
-		if(keyword == null) {
-			products = productDB; 
-		} else {
-			products = productDB.stream()
-					.filter(p -> p.getName().contains(keyword))
-					.collect(Collectors.toList());
-		}
-		
+		if(keyword != null) {
+			products = productService.findByName(keyword);
+		}		
 		return ResponseEntity.ok(products);
 	}
 	
 	@GetMapping(value="/products")
 	public ResponseEntity<List<Product>> getProducts(@ModelAttribute ProductQueryParameter param) {
-		  Stream<Product> stream = productDB.stream();
-
-		    if (param.getKeyword() != null) {
-		        stream = stream
-		                .filter(p -> p.getName().contains(param.getKeyword()));
-		    }
-
-		    if ("price".equals(param.getOrderBy()) && param.getSortRule() != null) {
-		        Comparator<Product> comparator = param.getSortRule().equals("asc")
-		                ? Comparator.comparing(Product::getPrice)
-		                : Comparator.comparing(Product::getPrice).reversed();
-
-		        stream = stream.sorted(comparator);
-		    }
-
-		    List<Product> products = stream.collect(Collectors.toList());
-
-		    return ResponseEntity.ok(products);
+		 List<Product> products = productService.getProducts(param);
+		 return ResponseEntity.ok(products);
 	}
 	
 }

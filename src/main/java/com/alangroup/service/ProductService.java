@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alangroup.dao.MockProductDAO;
+import com.alangroup.exception.NotFoundException;
+import com.alangroup.exception.UnprocessableException;
 import com.alangroup.vo.Product;
 import com.alangroup.vo.ProductQueryParameter;
 
 @Service
-public class ProductSercvice {
+public class ProductService {
 
 	@Autowired
 	private MockProductDAO productDAO;
@@ -18,7 +20,7 @@ public class ProductSercvice {
 	public Product createProduct(Product request) {
 		boolean isIdDuplicated = productDAO.find(request.getId()).isPresent();
 		if (isIdDuplicated) {
-			throw new Exception("Id is Duplicated");
+			throw new UnprocessableException("Id is Duplicated");
 		}
 		
 		Product product = new Product();
@@ -49,5 +51,9 @@ public class ProductSercvice {
 
 	public List<Product> getProducts(ProductQueryParameter param) {
 		  return productDAO.find(param);
+	}
+	
+	public List<Product> findByName(String name) {
+		return productDAO.findByName(name);
 	}
 }
