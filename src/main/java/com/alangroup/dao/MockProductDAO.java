@@ -28,7 +28,7 @@ public class MockProductDAO {
 			p.setName(product.getName());
 			p.setPrice(product.getPrice());
 		});
-		return product;
+		return find(id).get();
 	}
 	
 	public void delete(String id) {
@@ -39,6 +39,12 @@ public class MockProductDAO {
 		return productDB.stream()
 				.filter(p -> p.getId().equals(id))
 				.findFirst();
+	}
+	
+	public List<Product> findByName(String name) {
+		return productDB.stream()
+		.filter(p -> p.getName().contains(name))
+		.collect(Collectors.toList());
 	}
 	
 	public List<Product> find(ProductQueryParameter param) {
