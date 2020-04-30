@@ -20,6 +20,11 @@
 	</properties>
 
 	<dependencies>
+		<!-- 匯入MongoDB的函式庫 -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
 		<!-- 當代碼變動時，它會自動進行重啟應用 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

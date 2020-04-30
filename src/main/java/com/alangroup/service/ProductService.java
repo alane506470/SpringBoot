@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.alangroup.dao.MockProductDAO;
 import com.alangroup.exception.NotFoundException;
 import com.alangroup.exception.UnprocessableException;
+import com.alangroup.mapper.ProductRepository;
 import com.alangroup.vo.Product;
 import com.alangroup.vo.ProductQueryParameter;
 
@@ -16,7 +17,9 @@ public class ProductService {
 
 	@Autowired
 	private MockProductDAO productDAO;
-
+	@Autowired
+	private ProductRepository repository;
+	
 	public Product createProduct(Product request) {
 		boolean isIdDuplicated = productDAO.find(request.getId()).isPresent();
 		if (isIdDuplicated) {
@@ -27,26 +30,26 @@ public class ProductService {
 		product.setId(request.getId());
 		product.setName(request.getName());
 		product.setPrice(request.getPrice());
-		return productDAO.insert(product);
+		return repository.insert(product);
 	}
 
 	public Product replaceProduct(String id, Product request) {
-		boolean isPresent = productDAO.find(id).isPresent();
-	    if (!isPresent) {
-	        throw new NotFoundException("Can't find product.");
-	    }
+		   Product oldProduct = getProduct(id);
 
-	    return productDAO.replace(id, request);
+	        Product product = new Product();
+	        product.setName(request.getName());
+	        product.setPrice(request.getPrice());
+
+	        return repository.save(product);
 		
 	}
 
 	public void deleteProduct(String id) {
-		productDAO.delete(id);
+		 repository.deleteById(id);
 	}
 
 	public Product getProduct(String id) {
-		return productDAO.find(id)
-				.orElseThrow(()-> new NotFoundException("can't find product"));
+		return repository.findById(id).orElseThrow(()-> new NotFoundException("can't find product"));
 	}
 
 	public List<Product> getProducts(ProductQueryParameter param) {
