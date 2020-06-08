@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,29 +42,41 @@ public class ProductController {
 		Product product = new Product();
 		product.setId(id);
 		product.setName("Horror movie episode" + id);
-//		return ResponseEntity.ok().body(product);
+		
 // 回傳ResponseEntity時，可以選擇一些常見的HTTP狀態，例如200（OK）、201（Created）、404（Not Found）、422（Unprocessable Entity）等。
-		return new ResponseEntity<>(product,HttpStatus.NOT_FOUND);
+		return ResponseEntity.ok().body(product);
 	}
 	
 	// 查詢
-	@GetMapping(value="/products/{id}")
+	@GetMapping(value="/productbyid/{id}")
 	public ResponseEntity<Product> getProduct(@PathVariable("id")String id) {
 		Product product = productService.getProduct(id);
-		return ResponseEntity.ok().body(product);
+		HttpHeaders responseHeaders = new HttpHeaders();
+		responseHeaders.set("Content-Type", 
+		"application/json;charset=UTF-8");
+		return ResponseEntity.ok().headers(responseHeaders).body(product);
 		
+	}
+	
+	@GetMapping(value="/products/{name}")
+	public ResponseEntity<List<Product>> getProductsByName(@PathVariable("name")String name) {
+		List<Product> products= new ArrayList<>();
+		products = productService.findByNameLike(name);
+		return ResponseEntity.ok().body(products);
 	}
 	
 	@PostMapping(value="/products")
 	public ResponseEntity<Product> createProduct(@RequestBody Product request) {
 		Product product = productService.createProduct(request);
 		
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+		URI location = ServletUriComponentsBuilder.fromUriString("http://localhost/alanapi/productbyid")
 				.path("/{id}")
 				.buildAndExpand(product.getId())
 				.toUri();
-		
-		return ResponseEntity.created(location).build();
+		HttpHeaders responseHeaders = new HttpHeaders();
+		responseHeaders.set("Content-Type", 
+		"application/json;charset=UTF-8");
+		return ResponseEntity.created(location).headers(responseHeaders).body(product);
 	}
 	
 	@PutMapping(value="/products/{id}")
@@ -83,12 +97,13 @@ public class ProductController {
 	// 三、網址參數
 	@GetMapping(value="/products/oneParam")
 	public ResponseEntity<List<Product>> getProducts(@RequestParam(value = "keyword",required = false)String keyword) {
-		List<Product> products = new ArrayList<>();
-		
-		if(keyword != null) {
-			products = productService.findByName(keyword);
-		}		
-		return ResponseEntity.ok(products);
+		return null;
+//		List<Product> products = new ArrayList<>();
+//		
+//		if(keyword != null) {
+//			products = productService.findByName(keyword);
+//		}		
+//		return ResponseEntity.ok(products);
 	}
 	
 	@GetMapping(value="/products")
